@@ -115,7 +115,7 @@
         <p>Stuur me een bericht. Ik reageer altijd.</p>
       </div>
 
-      <form class="contact-form" action="https://formspree.io/f/xdeoyrdy" method="post">
+      <form class="contact-form" id="contact-form" action="https://formspree.io/f/xdeoyrdy" method="post">
         <div class="field">
           <label for="naam">Naam</label>
           <input id="naam" name="naam" type="text" autocomplete="name" required>
@@ -134,6 +134,7 @@
         <input type="hidden" name="_subject" value="Bericht via tomdehaas.nl">
         <button class="form-submit" type="submit">Verstuur bericht</button>
         <p class="form-note">Geen nieuwsbrief. Geen account. Gewoon een bericht naar mij.</p>
+        <div id="form-status" class="form-status" role="status" aria-live="polite"></div>
       </form>
     </div>
   </section>
@@ -145,6 +146,55 @@
     <div class="footer-note">Persoonlijke website. Uitspraken en projecten hier vertegenwoordigen niet mijn werkgever.</div>
   </div>
 </footer>
+
+
+<script>
+  const contactForm = document.getElementById('contact-form');
+  const formStatus = document.getElementById('form-status');
+
+  if (contactForm) {
+    contactForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+
+      const submitButton = contactForm.querySelector('button[type="submit"]');
+      const originalButtonText = submitButton.textContent;
+
+      submitButton.disabled = true;
+      submitButton.textContent = 'Bezig met versturen...';
+      formStatus.className = 'form-status';
+      formStatus.textContent = '';
+
+      try {
+        const response = await fetch(contactForm.action, {
+          method: 'POST',
+          body: new FormData(contactForm),
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Formspree gaf geen succesvolle response.');
+        }
+
+        contactForm.reset();
+
+        // Verberg de invoervelden en knop na succesvolle verzending.
+        Array.from(contactForm.children).forEach((child) => {
+          if (child !== formStatus) child.hidden = true;
+        });
+
+        formStatus.className = 'form-status success';
+        formStatus.innerHTML = '<strong>Dank je. Je bericht is verstuurd.</strong><br>Ik reageer altijd.';
+      } catch (error) {
+        formStatus.className = 'form-status error';
+        formStatus.textContent = 'Dat ging niet goed. Probeer het nog eens.';
+        submitButton.disabled = false;
+        submitButton.textContent = originalButtonText;
+      }
+    });
+  }
+</script>
 
 </body>
 </html>
