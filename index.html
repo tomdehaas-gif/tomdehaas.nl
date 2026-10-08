@@ -169,13 +169,19 @@
 </footer>
 
 
+<script src="/assets/contact-analytics.js"></script>
 <script>
   const contactForm = document.getElementById('contact-form');
   const formStatus = document.getElementById('form-status');
+  let contactFormSubmitting = false;
+  let contactFormSubmitted = false;
 
   if (contactForm) {
     contactForm.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (contactFormSubmitting || contactFormSubmitted) return;
+      contactFormSubmitting = true;
+      window.tomContactAnalytics?.track('contact_form_submit');
 
       const submitButton = contactForm.querySelector('button[type="submit"]');
       const originalButtonText = submitButton.textContent;
@@ -198,6 +204,8 @@
           throw new Error('Formspree gaf geen succesvolle response.');
         }
 
+        contactFormSubmitted = true;
+        window.tomContactAnalytics?.track('contact_form_success');
         contactForm.reset();
 
         // Verberg de invoervelden en knop na succesvolle verzending.
@@ -208,6 +216,8 @@
         formStatus.className = 'form-status success';
         formStatus.innerHTML = '<strong>Dank je. Je bericht is verstuurd.</strong><br>Ik reageer altijd.';
       } catch (error) {
+        contactFormSubmitting = false;
+        window.tomContactAnalytics?.track('contact_form_error');
         formStatus.className = 'form-status error';
         formStatus.textContent = 'Dat ging niet goed. Probeer het nog eens.';
         submitButton.disabled = false;
